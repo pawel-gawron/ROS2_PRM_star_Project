@@ -1,0 +1,12 @@
+{
+    "python.autoComplete.extraPaths": [
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/install/nav2_sms_behavior/local/lib/python3.11/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/install/nav2_sms_behavior/local/lib/python3.11/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
+    ]
+}

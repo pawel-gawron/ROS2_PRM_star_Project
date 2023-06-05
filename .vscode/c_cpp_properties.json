@@ -1,0 +1,25 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/install/nav2_straightline_planner/include/**",
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/install/nav2_sms_behavior/include/**",
+        "/opt/ros/humble/include/**",
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/src/navigation2_tutorials/nav2_gradient_costmap_plugin/include/**",
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/src/navigation2_tutorials/nav2_sms_behavior/include/**",
+        "/home/pawel/Documents/RISA/sem1/MIAPR/ROS2_PRM*_Project/src/navigation2_tutorials/nav2_straightline_planner/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}
