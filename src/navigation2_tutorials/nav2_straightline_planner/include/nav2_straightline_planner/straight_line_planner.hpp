@@ -53,6 +53,8 @@
 #include "nav2_util/robot_utils.hpp"
 #include "nav2_util/lifecycle_node.hpp"
 #include "nav2_costmap_2d/costmap_2d_ros.hpp"
+#include <unordered_map>
+#include <tuple>
 
 namespace nav2_straightline_planner
 {
@@ -83,6 +85,8 @@ public:
   float heuristic_cost(std::vector<float> point, std::vector<float> end);
   std::vector<std::pair<double, double>> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
 
+  bool isValid(const std::pair<double, double>& a, const std::pair<double, double>& b);
+  
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
@@ -107,4 +111,32 @@ private:
 
 }  // namespace nav2_straightline_planner
 
+
+
+// CUSTOM CLASS
+// Graph representation using adjacency list
+class Graph
+{
+public:
+    // map
+    // keys : vertex
+    // values : vector of neighbours 
+    // each neighbour is a tuple: <vertex>, distance
+    std::unordered_map<std::pair<double, double>, std::vector<std::tuple<std::pair<double, double>, double>> adjacencyList;
+
+    // Add neighbours to vertex
+    void addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double>>);
+
+    // Get the neighbors of a vertex
+    const std::vector<std::tuple<std::pair<double, double>, double>>& getNeighbors(const std::pair<double, double>&);
+
+    // 
+    std::vector<std::pair<double, double>> computeNeighbours(const std::pair<double, double>& vertex, double radius, int K);
+
+
+    std::tuple<std::pair<double, double>, double> computeNeighbours(<std::pair<double, double> vertex);
+
+
+
+};
 #endif  // NAV2_STRAIGHTLINE_PLANNER__STRAIGHT_LINE_PLANNER_HPP_
