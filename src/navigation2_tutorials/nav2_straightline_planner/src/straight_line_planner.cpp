@@ -95,31 +95,53 @@ float StraightLine::heuristic_cost(std::vector<float> point, std::vector<float> 
     return sqrt(pow(end[0] - point[0], 2)+ pow(end[1] - point[1], 2));
 }
 
-// std::vector<std::pair<double, double>> StraightLine::random_point(const std::pair<double, double>& start, const std::pair<double, double>& end) {
-//     std::vector<std::pair<double, double>> points;
-//     points.push_back(start);
-//     points.push_back(end);
+std::vector<std::pair<double, double>> StraightLine::random_point(const std::pair<double, double>& start, const std::pair<double, double>& end) {
+    std::vector<std::pair<double, double>> points;
+    points.push_back(start);
+    points.push_back(end);
 
-//     std::random_device rd;
-//     std::mt19937 gen(rd());
-//     std::uniform_real_distribution<double> distrib_x(0, width);
-//     std::uniform_real_distribution<double> distrib_y(0, height);
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    double originX = costmap_->getOriginX();
+    double originY = costmap_->getOriginY();
 
-//     for (int i = 0; i < num_samples; ++i) {
-//         double x = distrib_x(gen);
-//         double y = distrib_y(gen);
+    int width = costmap_->getSizeInMetersX();
+    int height = costmap_->getSizeInMetersY();
+    RCLCPP_INFO(
+    node_->get_logger(), "Dimensions: height=%d, width=%d",
+    height, width);
+    std::uniform_real_distribution<double> distrib_x(originX, originX + width);
+    std::uniform_real_distribution<double> distrib_y(originY, originY + height);
 
-//         int x_check = static_cast<int>(x / resolution);
-//         int y_check = static_cast<int>(y / resolution);
+    do {
+        double x = distrib_x(gen);
+        double y = distrib_y(gen);
 
-//         if (map(y_check, x_check) <= 80) {
-//             points.push_back(std::make_pair(x, y));
-//         }
-//     }
+        RCLCPP_INFO(
+        node_->get_logger(), "Random: height=%f, width=%f",
+        x, y);
 
-//     return points;
-// }
+        int x_check = static_cast<int>(x / interpolation_resolution_);
+        int y_check = static_cast<int>(y / interpolation_resolution_);
 
+        unsigned int mx,my;
+
+        costmap_->worldToMap(x,y,mx,my);
+
+        RCLCPP_INFO(
+        node_->get_logger(), "world to map: height=%d, width=%d",
+        costmap_->getCost(mx, my), my);
+
+        if (costmap_->getCost(mx, my) < 200) {
+            points.push_back(std::make_pair(x, y));
+        }
+    }
+    while (points.size()<num_samples);
+
+    return points;
+}
+//CUSTOM FUNCTIONS
+////////////////////////////////////////////////////////////////////////////
 nav_msgs::msg::Path StraightLine::createPlan(
   const geometry_msgs::msg::PoseStamped & start,
   const geometry_msgs::msg::PoseStamped & goal)
@@ -144,13 +166,33 @@ nav_msgs::msg::Path StraightLine::createPlan(
   global_path.poses.clear();
   global_path.header.stamp = node_->now();
   global_path.header.frame_id = global_frame_;
-  // // calculating the number of loops for current value of interpolation_resolution_
-  // int total_number_of_loop = std::hypot(
-  //   goal.pose.position.x - start.pose.position.x,
-  //   goal.pose.position.y - start.pose.position.y) /
-  //   interpolation_resolution_;
-  // double x_increment = (goal.pose.position.x - start.pose.position.x) / total_number_of_loop;
-  // double y_increment = (goal.pose.position.y - start.pose.position.y) / total_number_of_loop;
+  // calculating the number of loops for current value of interpolation_resolution_
+  int total_number_of_loop = std::hypot(
+    goal.pose.position.x - start.pose.position.x,
+    goal.pose.position.y - start.pose.position.y) /
+    interpolation_resolution_;
+  double x_increment = (goal.pose.position.x - start.pose.position.x) / total_number_of_loop;
+  double y_increment = (goal.pose.position.y - start.pose.position.y) / total_number_of_loop;
+
+  std::vector<std::pair<double, double>> random_points = StraightLine::random_point(
+    std::make_pair(start.pose.position.x, start.pose.position.y),
+    std::make_pair(goal.pose.position.x, goal.pose.position.y));
+
+  // for (const auto& point : random_points) {
+  //   RCLCPP_INFO(
+  //       node_->get_logger(), "Random Point: x=%f, y=%f",
+  //       point.first, point.second);
+  // }
+
+    // Używanie wygenerowanych punktów
+  for (const auto& point : random_points) {
+    // Dodawanie punktów do globalnej ścieżki
+    geometry_msgs::msg::PoseStamped pose;
+    pose.header.frame_id = global_frame_;
+    pose.pose.position.x = point.first;
+    pose.pose.position.y = point.second;
+    global_path.poses.push_back(pose);
+  }
 
   // for (int i = 0; i < total_number_of_loop; ++i) {
   //   geometry_msgs::msg::PoseStamped pose;
@@ -171,14 +213,13 @@ nav_msgs::msg::Path StraightLine::createPlan(
   // goal_pose.header.frame_id = global_frame_;
   // global_path.poses.push_back(goal_pose);
 
-  // return global_path;
-
   //pobieramy kordynaty początku i końca
   unsigned int end_x,end_y;
   costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
   unsigned int start_x,start_y;
   costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
 
+  return global_path;
 }
 
 }  // namespace nav2_straightline_planner

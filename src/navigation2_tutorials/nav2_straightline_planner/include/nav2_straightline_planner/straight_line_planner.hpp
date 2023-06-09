@@ -102,6 +102,7 @@ private:
   std::string global_frame_, name_;
 
   double interpolation_resolution_;
+  int num_samples = 200;
 };
 
 }  // namespace nav2_straightline_planner
