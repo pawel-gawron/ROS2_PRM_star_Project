@@ -41,6 +41,7 @@
 #include <cmath>
 #include <string>
 #include <memory>
+#include <random>
 #include "nav2_util/node_utils.hpp"
 
 #include "nav2_straightline_planner/straight_line_planner.hpp"
@@ -87,6 +88,38 @@ void StraightLine::deactivate()
     name_.c_str());
 }
 
+////////////////////////////////////////////////////////////////////////////
+//CUSTOM FUNCTIONS
+
+float StraightLine::heuristic_cost(std::vector<float> point, std::vector<float> end){
+    return sqrt(pow(end[0] - point[0], 2)+ pow(end[1] - point[1], 2));
+}
+
+// std::vector<std::pair<double, double>> StraightLine::random_point(const std::pair<double, double>& start, const std::pair<double, double>& end) {
+//     std::vector<std::pair<double, double>> points;
+//     points.push_back(start);
+//     points.push_back(end);
+
+//     std::random_device rd;
+//     std::mt19937 gen(rd());
+//     std::uniform_real_distribution<double> distrib_x(0, width);
+//     std::uniform_real_distribution<double> distrib_y(0, height);
+
+//     for (int i = 0; i < num_samples; ++i) {
+//         double x = distrib_x(gen);
+//         double y = distrib_y(gen);
+
+//         int x_check = static_cast<int>(x / resolution);
+//         int y_check = static_cast<int>(y / resolution);
+
+//         if (map(y_check, x_check) <= 80) {
+//             points.push_back(std::make_pair(x, y));
+//         }
+//     }
+
+//     return points;
+// }
+
 nav_msgs::msg::Path StraightLine::createPlan(
   const geometry_msgs::msg::PoseStamped & start,
   const geometry_msgs::msg::PoseStamped & goal)
@@ -111,34 +144,41 @@ nav_msgs::msg::Path StraightLine::createPlan(
   global_path.poses.clear();
   global_path.header.stamp = node_->now();
   global_path.header.frame_id = global_frame_;
-  // calculating the number of loops for current value of interpolation_resolution_
-  int total_number_of_loop = std::hypot(
-    goal.pose.position.x - start.pose.position.x,
-    goal.pose.position.y - start.pose.position.y) /
-    interpolation_resolution_;
-  double x_increment = (goal.pose.position.x - start.pose.position.x) / total_number_of_loop;
-  double y_increment = (goal.pose.position.y - start.pose.position.y) / total_number_of_loop;
+  // // calculating the number of loops for current value of interpolation_resolution_
+  // int total_number_of_loop = std::hypot(
+  //   goal.pose.position.x - start.pose.position.x,
+  //   goal.pose.position.y - start.pose.position.y) /
+  //   interpolation_resolution_;
+  // double x_increment = (goal.pose.position.x - start.pose.position.x) / total_number_of_loop;
+  // double y_increment = (goal.pose.position.y - start.pose.position.y) / total_number_of_loop;
 
-  for (int i = 0; i < total_number_of_loop; ++i) {
-    geometry_msgs::msg::PoseStamped pose;
-    pose.pose.position.x = start.pose.position.x + x_increment * i;
-    pose.pose.position.y = start.pose.position.y + y_increment * i;
-    pose.pose.position.z = 0.0;
-    pose.pose.orientation.x = 0.0;
-    pose.pose.orientation.y = 0.0;
-    pose.pose.orientation.z = 0.0;
-    pose.pose.orientation.w = 1.0;
-    pose.header.stamp = node_->now();
-    pose.header.frame_id = global_frame_;
-    global_path.poses.push_back(pose);
-  }
+  // for (int i = 0; i < total_number_of_loop; ++i) {
+  //   geometry_msgs::msg::PoseStamped pose;
+  //   pose.pose.position.x = start.pose.position.x + x_increment * i;
+  //   pose.pose.position.y = start.pose.position.y + y_increment * i;
+  //   pose.pose.position.z = 0.0;
+  //   pose.pose.orientation.x = 0.0;
+  //   pose.pose.orientation.y = 0.0;
+  //   pose.pose.orientation.z = 0.0;
+  //   pose.pose.orientation.w = 1.0;
+  //   pose.header.stamp = node_->now();
+  //   pose.header.frame_id = global_frame_;
+  //   global_path.poses.push_back(pose);
+  // }
 
-  geometry_msgs::msg::PoseStamped goal_pose = goal;
-  goal_pose.header.stamp = node_->now();
-  goal_pose.header.frame_id = global_frame_;
-  global_path.poses.push_back(goal_pose);
+  // geometry_msgs::msg::PoseStamped goal_pose = goal;
+  // goal_pose.header.stamp = node_->now();
+  // goal_pose.header.frame_id = global_frame_;
+  // global_path.poses.push_back(goal_pose);
 
-  return global_path;
+  // return global_path;
+
+  //pobieramy kordynaty początku i końca
+  unsigned int end_x,end_y;
+  costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
+  unsigned int start_x,start_y;
+  costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
+
 }
 
 }  // namespace nav2_straightline_planner

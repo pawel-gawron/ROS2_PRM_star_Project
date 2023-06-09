@@ -78,6 +78,11 @@ public:
   // plugin deactivate
   void deactivate() override;
 
+////////////////////////////////////////////////////////////////////////////
+//CUSTOM FUNCTIONS
+  float heuristic_cost(std::vector<float> point, std::vector<float> end);
+  std::vector<std::pair<double, double>> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
+
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
