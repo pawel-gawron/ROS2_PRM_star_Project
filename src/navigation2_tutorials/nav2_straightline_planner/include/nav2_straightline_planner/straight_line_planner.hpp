@@ -113,6 +113,8 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////
 //CUSTOM FUNCTIONS
+  std::unordered_map<vertex, node, VertexHash> graph;
+  void computeNeighbours(vertex v, double radius, int K);
   float heuristic_cost(std::vector<float> point, std::vector<float> end);
   std::vector<std::pair<double, double>> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
 
@@ -145,33 +147,33 @@ private:
 
 // CUSTOM CLASS
 // Graph representation using adjacency list
-class Graph
-{
-public:
-    // map
-    // keys : vertex
-    // values : vector of neighbours 
-    // each neighbour is a tuple: <vertex>, distance    
-    std::unordered_map<vertex, node, VertexHash> graph;
+// class Graph
+// {
+// public:
+//     // map
+//     // keys : vertex
+//     // values : vector of neighbours 
+//     // each neighbour is a tuple: <vertex>, distance    
+//     std::unordered_map<vertex, node, VertexHash> graph;
 
-    void computeNeighbours(vertex& v, double radius, int K);
+//     void computeNeighbours(vertex v, double radius, int K);
 
-    // Add neighbours to vertex
-    // void addNeighbours(vertex v);
+//     // Add neighbours to vertex
+//     // void addNeighbours(vertex v);
 
-    // void addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double>>);
+//     // void addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double>>);
 
-    // Get the neighbors of a vertex
-    // const std::vector<std::tuple<std::pair<double, double>, double>>& getNeighbors(const std::pair<double, double>&);
+//     // Get the neighbors of a vertex
+//     // const std::vector<std::tuple<std::pair<double, double>, double>>& getNeighbors(const std::pair<double, double>&);
 
-    // 
+//     // 
     
 
-    // std::tuple<std::pair<double, double>, double> computeNeighbours(<std::pair<double, double> vertex);
+//     // std::tuple<std::pair<double, double>, double> computeNeighbours(<std::pair<double, double> vertex);
 
 
 
-};
+// };
 
 }  // namespace nav2_straightline_planner
 

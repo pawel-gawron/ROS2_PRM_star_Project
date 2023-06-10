@@ -173,17 +173,16 @@ bool compareBySecond(const std::pair<vertex, double>& a, const std::pair<vertex,
   return a.second < b.second;
 }
 
-void Graph::computeNeighbours(vertex& v, double radius, int K)
+void StraightLine::computeNeighbours(vertex v, double radius, int K)
 {
   node tmp;
-  StraightLine straightLine;
   for (const auto& vertex : graph)
   {
     // std::vector<double> distances;
 
     if (v.x != vertex.first.x && v.y != vertex.first.y)
       {
-        if (straightLine.isValid(v, vertex.first))
+        if (isValid(v, vertex.first))
         {
           double dist = sqrt(pow(v.x - vertex.first.x, 2)+ pow(v.y - vertex.first.y, 2));
           if (dist <= radius)
@@ -193,7 +192,6 @@ void Graph::computeNeighbours(vertex& v, double radius, int K)
           }
         }
       }
-    delete &straightLine;
   }
 
   std::sort(tmp.neighbours.begin(), tmp.neighbours.end(), nav2_straightline_planner::compareBySecond);
@@ -204,21 +202,21 @@ void Graph::computeNeighbours(vertex& v, double radius, int K)
 }
 
 
-// void Graph::addNeighbours(vertex v)
+// void StraightLine::addNeighbours(vertex v)
 // {
 //   node tmp;
 //   tmp.v = v;
-//   tmp.neighbours = Graph::computeNeighbours;
+//   tmp.neighbours = StraightLine::computeNeighbours;
 //   graph[v] = tmp;
 // }
 
 
-// const std::vector<std::tuple<std::pair<double, double>, double>>& Graph::Graph(const std::pair<double, double>& vertex)
+// const std::vector<std::tuple<std::pair<double, double>, double>>& StraightLine::StraightLine(const std::pair<double, double>& vertex)
 // {
 //   return adjacencyList[vertex];
 // }
 
-// std::vector<std::pair<double, double>> Graph::computeNeighbours(const std::pair<double, double>& vertex, double radius, int K)
+// std::vector<std::pair<double, double>> StraightLine::computeNeighbours(const std::pair<double, double>& vertex, double radius, int K)
 // {
 
 // }
@@ -308,10 +306,24 @@ nav_msgs::msg::Path StraightLine::createPlan(
   costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
 
   // inicjalizacja pustego grafu
-  Graph graph;
   std::vector<std::pair<double, double>> emptyVector;
-  // graph.addNeighbours(start, emptyVector)
+  // computeNeighbours(vertex& v, double radius, int K);
+  vertex startPosevertex;
+  startPosevertex.x = 5.0;
+  startPosevertex.y = 10.0;
 
+  vertex startPosevertex2;
+  startPosevertex2.x = 6.0;
+  startPosevertex2.y = 11.0;
+
+  graph[startPosevertex] = node();
+  computeNeighbours(startPosevertex2, 10.0, 5);
+
+  
+  // for (const auto& vertex : graph.graph)
+  // {
+  //     std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+  // }
 
 
   return global_path;
