@@ -143,7 +143,7 @@ std::vector<std::pair<double, double>> StraightLine::random_point(const std::pai
     return points;
 }
 
-bool StraightLine::isValid(const std::pair<double, double>& a, const std::pair<double, double>& b)
+bool StraightLine::isValid(const vertex& a, const vertex& b)
 {
     std::vector<double> x_div(100);
     std::vector<double> y_div(100);
@@ -151,8 +151,8 @@ bool StraightLine::isValid(const std::pair<double, double>& a, const std::pair<d
     for (int i = 0; i < 100; ++i)
     {
         double t = static_cast<double>(i) / 99.0;
-        x_div[i] = a.first + t * (b.first - a.first);
-        y_div[i] = a.second + t * (b.second - a.second);
+        x_div[i] = a.x + t * (b.x - a.x);
+        y_div[i] = a.y + t * (b.y - a.y);
     }
 
     for (int i = 0; i < 100; ++i)
@@ -168,67 +168,62 @@ bool StraightLine::isValid(const std::pair<double, double>& a, const std::pair<d
     return true;
 }
 
-
-void Graph::addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double> neigbours);
+bool compareBySecond(const std::pair<vertex, double>& a, const std::pair<vertex, double>& b)
 {
-  adjacencyList[vertex].push_back(neigbours);
+  return a.second < b.second;
 }
 
-const std::vector<std::tuple<std::pair<double, double>, double>>& Graph::Graph(const std::pair<double, double>& vertex);
+void Graph::computeNeighbours(vertex& v, double radius, int K)
 {
-  return adjacencyList[vertex];
+  node tmp;
+  StraightLine straightLine;
+  for (const auto& vertex : graph)
+  {
+    // std::vector<double> distances;
+
+    if (v.x != vertex.first.x && v.y != vertex.first.y)
+      {
+        if (straightLine.isValid(v, vertex.first))
+        {
+          double dist = sqrt(pow(v.x - vertex.first.x, 2)+ pow(v.y - vertex.first.y, 2));
+          if (dist <= radius)
+          {
+            tmp.v = vertex.first;
+            tmp.neighbours.emplace_back(std::make_pair(vertex.first, dist));
+          }
+        }
+      }
+    delete &straightLine;
+  }
+
+  std::sort(tmp.neighbours.begin(), tmp.neighbours.end(), nav2_straightline_planner::compareBySecond);
+
+  tmp.neighbours.resize(K);
+
+  graph[v] = tmp;
 }
+
+
+// void Graph::addNeighbours(vertex v)
+// {
+//   node tmp;
+//   tmp.v = v;
+//   tmp.neighbours = Graph::computeNeighbours;
+//   graph[v] = tmp;
+// }
+
+
+// const std::vector<std::tuple<std::pair<double, double>, double>>& Graph::Graph(const std::pair<double, double>& vertex)
+// {
+//   return adjacencyList[vertex];
+// }
 
 // std::vector<std::pair<double, double>> Graph::computeNeighbours(const std::pair<double, double>& vertex, double radius, int K)
 // {
 
 // }
 
-??? Graph::computeNeighbours(const std::pair<double, double>& vertex, double radius, int K)
-{
-    // Iterate over the keys
-    for (const auto& point : adjacencyList)
-    {
-      std::vectr<double> distances;
-      if point != vertex
-      {
-          if StraightLine::isValid(point, vertex)
-          {
-            double dist =  sqrt(pow(point.first - vertex.first, 2)+ pow(point.second - vertex.second, 2));
-            if dist <= radius
-            {
-              distances.emplace_back(dist)
-            }
-          }
-      }
 
-
-      // Sort points based on distances
-      std::sort(points.begin(), points.end(), [&distances](const auto& p1, const auto& p2) {
-          auto index1 = std::distance(distances.begin(), std::find(distances.begin(), distances.end(), p1.first));
-          auto index2 = std::distance(distances.begin(), std::find(distances.begin(), distances.end(), p2.first));
-          return index1 < index2;
-      });
-
-      distances.resize(k);
-      points.resize(k);
-      WHATS NEXT?
-    };
-
-    }
-
-  // TODO: implement compute neighbours
-        // def find_neighbors(self, point):
-        // distances = []
-        // for neighbor in self.graph.keys():
-        //     if neighbor != point:
-        //         if neighbor in self.graph:
-        //             if self.check_if_valid(point, neighbor):
-        //                 dist = mt.sqrt((point[0] - neighbor[0]) ** 2 + (point[1] - neighbor[1]) ** 2)
-        //                 if dist <= self.connection_radius:
-        //                     distances.append((neighbor, dist))
-        // distances.sort(key=lambda x: x[1])
-        // return distances[:self.num_neighbors]
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -269,7 +264,7 @@ nav_msgs::msg::Path StraightLine::createPlan(
   std::pair<double, double> startPose = std::make_pair(start.pose.position.x, start.pose.position.y);
   std::pair<double, double> endPose = std::make_pair(goal.pose.position.x, goal.pose.position.y);
 
-  std::vector<std::pair<double, double>> random_points = StraightLine::random_point(start, end);
+  std::vector<std::pair<double, double>> random_points = StraightLine::random_point(startPose, endPose);
 
   // for (const auto& point : random_points) {
   //   RCLCPP_INFO(
@@ -315,7 +310,7 @@ nav_msgs::msg::Path StraightLine::createPlan(
   // inicjalizacja pustego grafu
   Graph graph;
   std::vector<std::pair<double, double>> emptyVector;
-  graph.addNeighbours(start, emptyVector)
+  // graph.addNeighbours(start, emptyVector)
 
 
 

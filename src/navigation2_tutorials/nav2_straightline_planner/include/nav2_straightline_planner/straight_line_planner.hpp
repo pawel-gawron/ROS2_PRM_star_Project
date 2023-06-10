@@ -59,6 +59,37 @@
 namespace nav2_straightline_planner
 {
 
+
+struct vertex
+{
+  double x;
+  double y;
+  
+    bool operator==(const vertex& other) const
+  {
+    return x == other.x && y == other.y;
+  }
+};
+
+struct node
+{
+  vertex v;
+  std::vector<std::pair<vertex, double>> neighbours;
+};
+
+// Custom hash function for vertex
+struct VertexHash
+{
+  std::size_t operator()(const vertex& v) const
+  {
+    std::size_t h1 = std::hash<double>{}(v.x);
+    std::size_t h2 = std::hash<double>{}(v.y);
+    return h1 ^ (h2 << 1); // Combining the hash values
+  }
+};
+
+
+
 class StraightLine : public nav2_core::GlobalPlanner
 {
 public:
@@ -85,7 +116,7 @@ public:
   float heuristic_cost(std::vector<float> point, std::vector<float> end);
   std::vector<std::pair<double, double>> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
 
-  bool isValid(const std::pair<double, double>& a, const std::pair<double, double>& b);
+  bool isValid(const vertex& a, const vertex& b);
   
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
@@ -109,7 +140,6 @@ private:
   int num_samples = 200;
 };
 
-}  // namespace nav2_straightline_planner
 
 
 
@@ -121,22 +151,29 @@ public:
     // map
     // keys : vertex
     // values : vector of neighbours 
-    // each neighbour is a tuple: <vertex>, distance
-    std::unordered_map<std::pair<double, double>, std::vector<std::tuple<std::pair<double, double>, double>> adjacencyList;
+    // each neighbour is a tuple: <vertex>, distance    
+    std::unordered_map<vertex, node, VertexHash> graph;
+
+    void computeNeighbours(vertex& v, double radius, int K);
 
     // Add neighbours to vertex
-    void addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double>>);
+    // void addNeighbours(vertex v);
+
+    // void addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double>>);
 
     // Get the neighbors of a vertex
-    const std::vector<std::tuple<std::pair<double, double>, double>>& getNeighbors(const std::pair<double, double>&);
+    // const std::vector<std::tuple<std::pair<double, double>, double>>& getNeighbors(const std::pair<double, double>&);
 
     // 
-    std::vector<std::pair<double, double>> computeNeighbours(const std::pair<double, double>& vertex, double radius, int K);
+    
 
-
-    std::tuple<std::pair<double, double>, double> computeNeighbours(<std::pair<double, double> vertex);
+    // std::tuple<std::pair<double, double>, double> computeNeighbours(<std::pair<double, double> vertex);
 
 
 
 };
+
+}  // namespace nav2_straightline_planner
+
+
 #endif  // NAV2_STRAIGHTLINE_PLANNER__STRAIGHT_LINE_PLANNER_HPP_
