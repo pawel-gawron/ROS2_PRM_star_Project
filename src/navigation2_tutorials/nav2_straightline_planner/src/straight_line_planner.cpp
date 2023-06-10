@@ -338,8 +338,6 @@ nav_msgs::msg::Path StraightLine::createPlan(
   graph[startPosevertex] = node();
   // graph[startPosevertex].v = startPosevertex;
 
-  graph[startPosevertex2] = node();
-
   graph[startPosevertex3] = node();
   // graph[startPosevertex3].v = startPosevertex3;
 

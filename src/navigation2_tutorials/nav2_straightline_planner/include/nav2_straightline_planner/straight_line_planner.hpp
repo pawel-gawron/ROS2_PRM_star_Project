@@ -140,6 +140,9 @@ private:
 
   double interpolation_resolution_;
   int num_samples = 200;
+
+  bool createPointsMap = true;
+  std::vector<std::pair<double, double>> random_points;
 };
 
 
