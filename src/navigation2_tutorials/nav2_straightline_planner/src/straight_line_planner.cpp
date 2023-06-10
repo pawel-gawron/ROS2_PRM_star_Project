@@ -145,6 +145,7 @@ std::vector<std::pair<double, double>> StraightLine::random_point(const std::pai
 
 bool StraightLine::isValid(const vertex& a, const vertex& b)
 {
+  return true;
     std::vector<double> x_div(100);
     std::vector<double> y_div(100);
 
@@ -162,7 +163,7 @@ bool StraightLine::isValid(const vertex& a, const vertex& b)
         costmap_->worldToMap(x_div[i], y_div[i], mx, my);
 
         if (costmap_->getCost(mx, my) > 200) {
-          return false ;
+          return true;
         }
     }
     return true;
@@ -180,23 +181,26 @@ void StraightLine::computeNeighbours(vertex v, double radius, int K)
   {
     // std::vector<double> distances;
 
-    if (v.x != vertex.first.x && v.y != vertex.first.y)
+    if (v.x != vertex.first.x || v.y != vertex.first.y)
       {
-        if (isValid(v, vertex.first))
-        {
+                RCLCPP_INFO(
+        node_->get_logger(), "Twoj stary");
+        // if (isValid(v, vertex.first))
+        // {
           double dist = sqrt(pow(v.x - vertex.first.x, 2)+ pow(v.y - vertex.first.y, 2));
-          if (dist <= radius)
-          {
-            tmp.v = vertex.first;
-            tmp.neighbours.emplace_back(std::make_pair(vertex.first, dist));
-          }
-        }
+          // if (dist <= radius)
+          // {
+            tmp.v.x = vertex.first.x;
+            tmp.v.y = vertex.first.y;
+            tmp.neighbours.push_back(std::make_pair(vertex.first, dist));
+          // }
+        // }
       }
   }
 
   std::sort(tmp.neighbours.begin(), tmp.neighbours.end(), nav2_straightline_planner::compareBySecond);
 
-  tmp.neighbours.resize(K);
+  // tmp.neighbours.resize(K);
 
   graph[v] = tmp;
 }
@@ -262,7 +266,10 @@ nav_msgs::msg::Path StraightLine::createPlan(
   std::pair<double, double> startPose = std::make_pair(start.pose.position.x, start.pose.position.y);
   std::pair<double, double> endPose = std::make_pair(goal.pose.position.x, goal.pose.position.y);
 
-  std::vector<std::pair<double, double>> random_points = StraightLine::random_point(startPose, endPose);
+  if (createPointsMap == true){
+      random_points = StraightLine::random_point(startPose, endPose);
+      createPointsMap = false;
+  }
 
   // for (const auto& point : random_points) {
   //   RCLCPP_INFO(
@@ -309,21 +316,51 @@ nav_msgs::msg::Path StraightLine::createPlan(
   std::vector<std::pair<double, double>> emptyVector;
   // computeNeighbours(vertex& v, double radius, int K);
   vertex startPosevertex;
-  startPosevertex.x = 5.0;
-  startPosevertex.y = 10.0;
+  startPosevertex.x = 1.0;
+  startPosevertex.y = 1.2;
+
+  vertex startPosevertex3;
+  startPosevertex3.x = 0.5;
+  startPosevertex3.y = 0.3;
+
+  vertex startPosevertex4;
+  startPosevertex4.x = 1.0;
+  startPosevertex4.y = 1.0;
+
+  vertex startPosevertex5;
+  startPosevertex5.x = 1.0;
+  startPosevertex5.y = 0.8;
 
   vertex startPosevertex2;
-  startPosevertex2.x = 6.0;
-  startPosevertex2.y = 11.0;
+  startPosevertex2.x = 1.1;
+  startPosevertex2.y = 1.5;
 
   graph[startPosevertex] = node();
-  computeNeighbours(startPosevertex2, 10.0, 5);
+  // graph[startPosevertex].v = startPosevertex;
+
+  graph[startPosevertex2] = node();
+
+  graph[startPosevertex3] = node();
+  // graph[startPosevertex3].v = startPosevertex3;
+
+  graph[startPosevertex4] = node();
+  // graph[startPosevertex4].v = startPosevertex4;
+
+  graph[startPosevertex5] = node();
+  // graph[startPosevertex5].v = startPosevertex5;
+  computeNeighbours(startPosevertex, 1000.0, 5);
+  // computeNeighbours(startPosevertex2, 1000.0, 5);
+
+  // RCLCPP_INFO(
+  // node_->get_logger(), "Twoja stara!!!");
 
   
-  // for (const auto& vertex : graph.graph)
-  // {
-  //     std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
-  // }
+  for (const auto& vertex : graph)
+  {
+    RCLCPP_INFO(
+    node_->get_logger(), "Twoja stara %lf,  %lf,  %ld,  %ld", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
+      // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+  }
 
 
   return global_path;
