@@ -77,6 +77,11 @@ struct node
   std::vector<std::pair<vertex, double>> neighbours;
 };
 
+struct q
+{
+  double distance;
+  vertex v;
+};
 // Custom hash function for vertex
 struct VertexHash
 {
@@ -120,6 +125,11 @@ public:
 
   bool isValid(const vertex& a, const vertex& b);
   
+  std::unordered_map<vertex, vertex, VertexHash> search(vertex start, vertex end);
+  std::unordered_map<vertex, double, VertexHash> start_dist;
+
+  std::set<vertex> visited;
+
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,

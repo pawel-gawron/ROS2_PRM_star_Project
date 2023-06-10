@@ -169,9 +169,19 @@ bool StraightLine::isValid(const vertex& a, const vertex& b)
     return true;
 }
 
-bool compareBySecond(const std::pair<vertex, double>& a, const std::pair<vertex, double>& b)
+std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, vertex end)
 {
-  return a.second < b.second;
+  std::vector<std::pair<q, vertex>> queue;
+
+  while !(queue.empty())
+  {
+    continue;
+  }
+  return std::unordered_map<vertex, vertex, VertexHash>();
+}
+bool compareBySecond(const std::pair<vertex, double> &a, const std::pair<vertex, double> &b)
+{
+    return a.second < b.second;
 }
 
 void StraightLine::computeNeighbours(vertex v, double radius, int K)
@@ -367,4 +377,5 @@ nav_msgs::msg::Path StraightLine::createPlan(
 }  // namespace nav2_straightline_planner
 
 #include "pluginlib/class_list_macros.hpp"
+#include "straight_line_planner.hpp"
 PLUGINLIB_EXPORT_CLASS(nav2_straightline_planner::StraightLine, nav2_core::GlobalPlanner)
