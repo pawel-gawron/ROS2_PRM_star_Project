@@ -92,8 +92,8 @@ void StraightLine::deactivate()
 
 //CUSTOM FUNCTIONS
 
-float StraightLine::heuristic_cost(std::vector<float> point, std::vector<float> end){
-    return sqrt(pow(end[0] - point[0], 2)+ pow(end[1] - point[1], 2));
+float StraightLine::heuristic_cost(vertex point, vertex end){
+    return sqrt(pow(end.x - point.x, 2)+ pow(end.y - point.y, 2));
 }
 
 std::vector<std::pair<double, double>> StraightLine::random_point(const std::pair<double, double>& start, const std::pair<double, double>& end) {
@@ -171,14 +171,69 @@ bool StraightLine::isValid(const vertex& a, const vertex& b)
 
 std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, vertex end)
 {
-  std::vector<std::pair<q, vertex>> queue;
+  // TODO: check if heuristtic is needed
+  std::vector<q> queue_vec;
+  q start_q;
+  start_q.v = start;
+  start_q.distance = heuristic_cost(start, end);
+  queue_vec.push_back(start_q);
 
-  while !(queue.empty())
+  std::set<vertex> visited;
+
+  vertex current;
+  while (!queue_vec.empty())
   {
-    continue;
+    current = queue_vec.front().v;
+    //double heuristic = queue_vec.front().distance;
+
+    if (current == end)
+      // FINISHED
+      // StraightLine::constructPath();
+      break;
+    
+    if (visited.find(current) != visited.end()) continue;
+
+    visited.insert(current);
+
+    std::vector<std::pair<vertex, double>> neighbours = graph[current].neighbours;
+    // prev_neighbor = None; 
+    vertex prev_neighbour;
+    double prev_distance = 1.0/0.0; // approximation of infinity value
+
+    for (const auto& pair : neighbours) 
+    {
+      vertex neighbour = pair.first;
+      double distance = pair.second;
+
+      double new_distance = start_dist[current] + distance; // + heuristic;
+      if (start_dist.find(neighbour) != start_dist.end() || \
+      ((prev_neighbour.x == 0.0 && prev_neighbour.y == 0.0) \
+      && new_distance < prev_distance))
+        {
+          parent[neighbour] = current;
+          start_dist[neighbour] = new_distance;
+          prev_neighbour = neighbour;
+          prev_distance = new_distance;
+        }
+      
+      q tmp = {new_distance + heuristic_cost(neighbour, end), neighbour};
+      queue_vec.push_back(tmp);
+
+      // self.publish_search() ???
+    }
+
+
+
   }
   return std::unordered_map<vertex, vertex, VertexHash>();
 }
+
+void StraightLine::constructPath(std::unordered_map<vertex, vertex, VertexHash> connections)
+{
+  
+}
+
+
 bool compareBySecond(const std::pair<vertex, double> &a, const std::pair<vertex, double> &b)
 {
     return a.second < b.second;
@@ -191,20 +246,20 @@ void StraightLine::computeNeighbours(vertex v, double radius, int K)
   {
     // std::vector<double> distances;
 
-    if (v.x != vertex.first.x || v.y != vertex.first.y)
+    if (v != vertex.first)
       {
                 RCLCPP_INFO(
-        node_->get_logger(), "Twoj stary");
-        // if (isValid(v, vertex.first))
-        // {
+        node_->get_logger(), "TEST");
+        if (isValid(v, vertex.first))
+        {
           double dist = sqrt(pow(v.x - vertex.first.x, 2)+ pow(v.y - vertex.first.y, 2));
-          // if (dist <= radius)
-          // {
+          if (dist <= radius)
+          {
             tmp.v.x = vertex.first.x;
             tmp.v.y = vertex.first.y;
             tmp.neighbours.push_back(std::make_pair(vertex.first, dist));
-          // }
-        // }
+          }
+        }
       }
   }
 
@@ -377,5 +432,4 @@ nav_msgs::msg::Path StraightLine::createPlan(
 }  // namespace nav2_straightline_planner
 
 #include "pluginlib/class_list_macros.hpp"
-#include "straight_line_planner.hpp"
 PLUGINLIB_EXPORT_CLASS(nav2_straightline_planner::StraightLine, nav2_core::GlobalPlanner)

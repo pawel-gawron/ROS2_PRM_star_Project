@@ -65,10 +65,38 @@ struct vertex
   double x;
   double y;
   
-    bool operator==(const vertex& other) const
+  bool operator==(const vertex& other) const
   {
     return x == other.x && y == other.y;
   }
+  bool operator!=(const vertex& other) const
+  {
+    return x != other.x || y != other.y;
+  }
+
+// probably not needed
+  // vertex& operator=(const vertex& other)
+  // {
+  //   if (this == &other) {
+  //         return *this;  // Self-assignment, no need to perform any operation
+  //     }
+      
+  //     x = other.x;
+  //     y = other.y;
+      
+  //     return *this;
+  // }
+
+      bool operator<(const vertex& other) const
+    {
+        // Define the comparison logic based on your requirements
+        if (x < other.x)
+            return true;
+        else if (x > other.x)
+            return false;
+        else
+            return y < other.y;
+    }
 };
 
 struct node
@@ -120,7 +148,7 @@ public:
 //CUSTOM FUNCTIONS
   std::unordered_map<vertex, node, VertexHash> graph;
   void computeNeighbours(vertex v, double radius, int K);
-  float heuristic_cost(std::vector<float> point, std::vector<float> end);
+  float heuristic_cost(vertex point, vertex end);
   std::vector<std::pair<double, double>> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
 
   bool isValid(const vertex& a, const vertex& b);
@@ -128,13 +156,13 @@ public:
   std::unordered_map<vertex, vertex, VertexHash> search(vertex start, vertex end);
   std::unordered_map<vertex, double, VertexHash> start_dist;
 
-  std::set<vertex> visited;
+  void constructPath(std::unordered_map<vertex, vertex, VertexHash> connections);
 
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal) override;
-
+  std::unordered_map<vertex, vertex, VertexHash> parent;
 private:
   // TF buffer
   std::shared_ptr<tf2_ros::Buffer> tf_;
