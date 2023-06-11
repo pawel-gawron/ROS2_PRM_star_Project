@@ -125,6 +125,8 @@ struct VertexHash
 
 class StraightLine : public nav2_core::GlobalPlanner
 {
+protected:
+  std::unordered_map<vertex, node, VertexHash> graph;
 public:
   StraightLine() = default;
   ~StraightLine() = default;
@@ -146,7 +148,6 @@ public:
 
 ////////////////////////////////////////////////////////////////////////////
 //CUSTOM FUNCTIONS
-  std::unordered_map<vertex, node, VertexHash> graph;
   void computeNeighbours(vertex v, double radius, int K);
   float heuristic_cost(vertex point, vertex end);
   std::vector<vertex> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
@@ -162,7 +163,17 @@ public:
   nav_msgs::msg::Path createPlan(
     const geometry_msgs::msg::PoseStamped & start,
     const geometry_msgs::msg::PoseStamped & goal) override;
+
+
   std::unordered_map<vertex, vertex, VertexHash> parent;
+
+
+  std::unordered_map<vertex, node, VertexHash> getGraph();
+  node getGraphNode(vertex v);
+  void setGraph(std::unordered_map<vertex, node, VertexHash> newGraph);
+  void setGraphNode(vertex v, node n);
+  
+  
 private:
   // TF buffer
   std::shared_ptr<tf2_ros::Buffer> tf_;
@@ -182,39 +193,6 @@ private:
   bool createPointsMap = true;
   std::vector<vertex> random_points;
 };
-
-
-
-
-// CUSTOM CLASS
-// Graph representation using adjacency list
-// class Graph
-// {
-// public:
-//     // map
-//     // keys : vertex
-//     // values : vector of neighbours 
-//     // each neighbour is a tuple: <vertex>, distance    
-//     std::unordered_map<vertex, node, VertexHash> graph;
-
-//     void computeNeighbours(vertex v, double radius, int K);
-
-//     // Add neighbours to vertex
-//     // void addNeighbours(vertex v);
-
-//     // void addNeighbours(std::pair<double, double> vertex, std::tuple<std::pair<double, double>>);
-
-//     // Get the neighbors of a vertex
-//     // const std::vector<std::tuple<std::pair<double, double>, double>>& getNeighbors(const std::pair<double, double>&);
-
-//     // 
-    
-
-//     // std::tuple<std::pair<double, double>, double> computeNeighbours(<std::pair<double, double> vertex);
-
-
-
-// };
 
 }  // namespace nav2_straightline_planner
 

@@ -91,6 +91,22 @@ void StraightLine::deactivate()
 
 
 //CUSTOM FUNCTIONS
+  std::unordered_map<vertex, node, VertexHash> StraightLine::getGraph()
+  {
+    return graph;
+  }
+  node StraightLine::getGraphNode(vertex v)
+  {
+    return graph[v];
+  }
+  void StraightLine::setGraph(std::unordered_map<vertex, node, VertexHash> newGraph)
+  {
+    graph =  newGraph;
+  }
+  void StraightLine::setGraphNode(vertex v, node n)
+  {
+    graph[v] = n;
+  }
 
 float StraightLine::heuristic_cost(vertex point, vertex end){
     return sqrt(pow(end.x - point.x, 2)+ pow(end.y - point.y, 2));
@@ -214,8 +230,8 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
 
     visited.insert(current);
 
-    std::vector<std::pair<vertex, double>> neighbours = graph[current].neighbours;
-    // prev_neighbor = None; 
+    std::vector<std::pair<vertex, double>> neighbours = getGraphNode(current).neighbours; 
+
     vertex prev_neighbour;
     double prev_distance = 1.0/0.0; // approximation of infinity value
 
@@ -238,9 +254,11 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
       q tmp = {new_distance + heuristic_cost(neighbour, end), neighbour};
       queue_vec.push_back(tmp);
 
-    if (graph.find(current) != graph.end()) {
-    graph.erase(current);
-    for (auto& node_neighbors : graph) {
+    if (getGraph().find(current) != getGraph().end()) {
+    std::unordered_map<vertex, node, VertexHash> graph_copy = getGraph();
+    graph_copy.erase(current);
+    setGraph(graph_copy);
+    for (auto& node_neighbors : getGraph()) {
         auto& neighbors = node_neighbors.second;
         neighbours.erase(std::remove_if(neighbours.begin(), neighbours.end(), 
             [current](const std::pair<vertex, double>& neighbor) {
@@ -254,7 +272,7 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
   }
   RCLCPP_INFO(
   node_->get_logger(), "PATH NOT FOUND");
-  return parent;
+  return {};
 }
 
 std::vector<vertex> StraightLine::constructPath(std::unordered_map<vertex, vertex, VertexHash> connections, vertex start, vertex end)
@@ -309,8 +327,8 @@ int temp = 0;
 
   // Assuming you want to update the node in the graph
   // tmp.neighbours.resize(K);
-  graph[v] = tmp;
-  std::size_t mapSize = graph[v].neighbours.size();
+  setGraphNode(v, tmp);
+  std::size_t mapSize = getGraphNode(v).neighbours.size();
   RCLCPP_INFO(
   node_->get_logger(), "GRAPH SIZE: %zu", mapSize);
 }
@@ -413,7 +431,7 @@ nav_msgs::msg::Path StraightLine::createPlan(
 
     // add every point to graph as empty
 
-    graph[point] = node();
+    setGraphNode(point, node());;
   }
 
   RCLCPP_INFO(
@@ -423,7 +441,7 @@ nav_msgs::msg::Path StraightLine::createPlan(
   {
     computeNeighbours(v, 1000, 50);
 
-  for (const auto& vertex : graph)
+  for (const auto& vertex : getGraph())
   {
     RCLCPP_INFO(
     node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
