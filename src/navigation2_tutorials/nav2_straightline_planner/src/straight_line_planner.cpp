@@ -195,14 +195,21 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
   vertex current;
   while (!queue_vec.empty())
   {
+
+    // RCLCPP_INFO(
+    // node_->get_logger(), "Test1 in search");
     current = queue_vec.front().v;
+    queue_vec.erase(queue_vec.begin());
     //double heuristic = queue_vec.front().distance;
 
-    if (current == end)
+    if (current == end){
       // FINISHED
       // StraightLine::constructPath();
-      break;
-    
+      RCLCPP_INFO(
+      node_->get_logger(), "PATH FOUND!");
+      return parent;
+    }
+
     if (visited.find(current) != visited.end()) continue;
 
     visited.insert(current);
@@ -217,38 +224,21 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
       vertex neighbour = pair.first;
       double distance = pair.second;
 
-      double new_distance = start_dist[current] + distance; // + heuristic;
+      double new_distance = start_dist[current] + distance;
       if (start_dist.find(neighbour) != start_dist.end() || \
       ((prev_neighbour.x == 0.0 && prev_neighbour.y == 0.0) \
-      && new_distance < prev_distance))
+      && new_distance + heuristic_cost(neighbour, end) < prev_distance) + heuristic_cost(prev_neighbour, end))
         {
           parent[neighbour] = current;
           start_dist[neighbour] = new_distance;
           prev_neighbour = neighbour;
           prev_distance = new_distance;
         }
-      
+
       q tmp = {new_distance + heuristic_cost(neighbour, end), neighbour};
       queue_vec.push_back(tmp);
 
-    // if (graph.find(current) != graph.end()) 
-    // {
-    //   delete graph[current];
-    //   for (auto& node_neighbours : graph)
-    // }
-
-//       if (graph.find(current) != graph.end()) 
-//       {
-//         graph.erase(current);
-//         for (auto& node_neighbours : graph) {
-//             auto& neighbours = node_neighbours.second;
-//             neighbours.erase(std::remove_if(neighbours.begin(), neighbours.end(), 
-//                 [current](const std::pair<vertex, double>& neighbor) {
-//                     return neighbour.first == current;
-//                 }), neighbours.end());
-//     }
-// }
-if (graph.find(current) != graph.end()) {
+    if (graph.find(current) != graph.end()) {
     graph.erase(current);
     for (auto& node_neighbors : graph) {
         auto& neighbors = node_neighbors.second;
@@ -256,11 +246,14 @@ if (graph.find(current) != graph.end()) {
             [current](const std::pair<vertex, double>& neighbor) {
                 return neighbor.first == current;
             }), neighbours.end());
+      }
     }
-}
+    
       // self.publish_search() ???
     }
   }
+  RCLCPP_INFO(
+  node_->get_logger(), "PATH NOT FOUND");
   return parent;
 }
 
@@ -289,32 +282,37 @@ bool compareBySecond(const std::pair<vertex, double> &a, const std::pair<vertex,
 void StraightLine::computeNeighbours(vertex v, double radius, int K)
 {
   node tmp;
-  for (const auto& vertex : graph)
-  {
-    // std::vector<double> distances;
+int temp = 0;
 
-    if (v != vertex.first)
+  for (const auto& vertex_pair : graph)
+  {
+
+    const vertex& vertex_temp = vertex_pair.first;
+
+    if (v != vertex_temp)
+    {
+      if (isValid(v, vertex_temp))
       {
-                RCLCPP_INFO(
-        node_->get_logger(), "TEST");
-        if (isValid(v, vertex.first))
+        double dist = sqrt(pow(v.x - vertex_temp.x, 2) + pow(v.y - vertex_temp.y, 2));
+        if (dist <= radius)
         {
-          double dist = sqrt(pow(v.x - vertex.first.x, 2)+ pow(v.y - vertex.first.y, 2));
-          if (dist <= radius)
-          {
-            tmp.v.x = vertex.first.x;
-            tmp.v.y = vertex.first.y;
-            tmp.neighbours.push_back(std::make_pair(vertex.first, dist));
-          }
+              // temp +=1;
+  //     RCLCPP_INFO(
+  // node_->get_logger(), "COUNTER: %d", temp);
+          tmp.v.x = vertex_temp.x;
+          tmp.v.y = vertex_temp.y;
+          tmp.neighbours.push_back(std::make_pair(vertex_temp, dist));
         }
       }
+    }
   }
 
-  std::sort(tmp.neighbours.begin(), tmp.neighbours.end(), nav2_straightline_planner::compareBySecond);
-
+  // Assuming you want to update the node in the graph
   // tmp.neighbours.resize(K);
-
   graph[v] = tmp;
+  std::size_t mapSize = graph[v].neighbours.size();
+  RCLCPP_INFO(
+  node_->get_logger(), "GRAPH SIZE: %zu", mapSize);
 }
 
 
@@ -375,8 +373,15 @@ nav_msgs::msg::Path StraightLine::createPlan(
   double x_increment = (goal.pose.position.x - start.pose.position.x) / total_number_of_loop;
   double y_increment = (goal.pose.position.y - start.pose.position.y) / total_number_of_loop;
 
-  std::pair<double, double> startPose = std::make_pair(start.pose.position.x, start.pose.position.y);
-  std::pair<double, double> endPose = std::make_pair(goal.pose.position.x, goal.pose.position.y);
+  //pobieramy kordynaty początku i końca
+  unsigned int end_x,end_y;
+  costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
+  unsigned int start_x,start_y;
+  costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
+
+
+  std::pair<double, double> startPose = std::make_pair(start_x, start_y);
+  std::pair<double, double> endPose = std::make_pair(end_x, end_y);
 
   if (createPointsMap == true){
       random_points = StraightLine::random_point(startPose, endPose);
@@ -411,15 +416,38 @@ nav_msgs::msg::Path StraightLine::createPlan(
     graph[point] = node();
   }
 
+  RCLCPP_INFO(
+  node_->get_logger(), "Test1");
+
   for (const auto& v : random_points)
   {
-    computeNeighbours(v, 10.0, 5);
+    computeNeighbours(v, 1000, 50);
+
+  for (const auto& vertex : graph)
+  {
+    RCLCPP_INFO(
+    node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
+      // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+  }
   }
 
+  RCLCPP_INFO(
+  node_->get_logger(), "Test2");
+
   std::unordered_map<vertex, vertex, VertexHash> map;
+
+  RCLCPP_INFO(
+  node_->get_logger(), "Test3");
+
   map = search(tmp_start, tmp_end);
 
+  RCLCPP_INFO(
+  node_->get_logger(), "Test4");
+
   std::vector<vertex> path = constructPath(map, tmp_start, tmp_end);
+
+  RCLCPP_INFO(
+  node_->get_logger(), "Test5");
 
   for (const auto& point : path) {
     // Dodawanie punktów do globalnej ścieżki
@@ -428,6 +456,9 @@ nav_msgs::msg::Path StraightLine::createPlan(
     pose.pose.position.x = point.x;
     pose.pose.position.y = point.y;
     global_path.poses.push_back(pose);
+
+    RCLCPP_INFO(
+    node_->get_logger(), "Points path: %f,  %f", point.x, point.y);
   }
 
   // for (int i = 0; i < total_number_of_loop; ++i) {
@@ -450,10 +481,10 @@ nav_msgs::msg::Path StraightLine::createPlan(
   // global_path.poses.push_back(goal_pose);
 
   //pobieramy kordynaty początku i końca
-  unsigned int end_x,end_y;
-  costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
-  unsigned int start_x,start_y;
-  costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
+  // unsigned int end_x,end_y;
+  // costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
+  // unsigned int start_x,start_y;
+  // costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
 
 
   // computeNeighbours(startPosevertex, 1000.0, 5);
@@ -463,12 +494,12 @@ nav_msgs::msg::Path StraightLine::createPlan(
   // node_->get_logger(), "Twoja stara!!!");
 
   
-  for (const auto& vertex : graph)
-  {
-    RCLCPP_INFO(
-    node_->get_logger(), "Twoja stara %lf,  %lf,  %ld,  %ld", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
-      // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
-  }
+  // for (const auto& vertex : graph)
+  // {
+  //   RCLCPP_INFO(
+  //   node_->get_logger(), "Twoja stara %lf,  %lf,  %ld,  %ld", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
+  //     // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+  // }
 
 
   return global_path;
