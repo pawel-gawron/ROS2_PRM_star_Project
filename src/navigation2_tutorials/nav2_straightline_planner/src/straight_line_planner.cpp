@@ -190,7 +190,7 @@ bool StraightLine::isValid(const vertex& a, const vertex& b)
         costmap_->worldToMap(x_div[i], y_div[i], mx, my);
 
         if (costmap_->getCost(mx, my) > 200) {
-          return true;
+          return false;
         }
     }
     return true;
@@ -300,7 +300,7 @@ bool compareBySecond(const std::pair<vertex, double> &a, const std::pair<vertex,
 void StraightLine::computeNeighbours(vertex v, double radius, int K)
 {
   node tmp;
-int temp = 0;
+  int temp = 0;
 
   for (const auto& vertex_pair : graph)
   {
@@ -401,26 +401,19 @@ nav_msgs::msg::Path StraightLine::createPlan(
   std::pair<double, double> startPose = std::make_pair(start_x, start_y);
   std::pair<double, double> endPose = std::make_pair(end_x, end_y);
 
+  vertex tmp_start;
+  tmp_start.x = start.pose.position.x;
+  tmp_start.y = start.pose.position.y;
+
+  vertex tmp_end;
+  tmp_end.x = goal.pose.position.x;
+  tmp_end.y = goal.pose.position.y;
+
   if (createPointsMap == true){
       random_points = StraightLine::random_point(startPose, endPose);
       createPointsMap = false;
-  }
 
-    vertex tmp_start;
-    tmp_start.x = start.pose.position.x;
-    tmp_start.y = start.pose.position.y;
-
-    vertex tmp_end;
-    tmp_end.x = goal.pose.position.x;
-    tmp_end.y = goal.pose.position.y;
-
-  // for (const auto& point : random_points) {
-  //   RCLCPP_INFO(
-  //       node_->get_logger(), "Random Point: x=%f, y=%f",
-  //       point.first, point.second);
-  // }
-
-    // Używanie wygenerowanych punktów
+          // Używanie wygenerowanych punktów
   for (const auto& point : random_points) {
     // Dodawanie punktów do globalnej ścieżki
     // geometry_msgs::msg::PoseStamped pose;
@@ -439,15 +432,26 @@ nav_msgs::msg::Path StraightLine::createPlan(
 
   for (const auto& v : random_points)
   {
-    computeNeighbours(v, 1000, 50);
+    computeNeighbours(v, 0.5, 5);
 
-  for (const auto& vertex : getGraph())
-  {
-    RCLCPP_INFO(
-    node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
-      // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+
   }
+
+      for (const auto& vertex : getGraph())
+    {
+      RCLCPP_INFO(
+      node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
+        // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+    }
   }
+
+  // for (const auto& point : random_points) {
+  //   RCLCPP_INFO(
+  //       node_->get_logger(), "Random Point: x=%f, y=%f",
+  //       point.first, point.second);
+  // }
+
+
 
   RCLCPP_INFO(
   node_->get_logger(), "Test2");
