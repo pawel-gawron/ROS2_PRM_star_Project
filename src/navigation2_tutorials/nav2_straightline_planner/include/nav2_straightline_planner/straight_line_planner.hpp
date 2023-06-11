@@ -87,7 +87,7 @@ struct vertex
   //     return *this;
   // }
 
-      bool operator<(const vertex& other) const
+  bool operator<(const vertex& other) const
     {
         // Define the comparison logic based on your requirements
         if (x < other.x)
@@ -149,14 +149,14 @@ public:
   std::unordered_map<vertex, node, VertexHash> graph;
   void computeNeighbours(vertex v, double radius, int K);
   float heuristic_cost(vertex point, vertex end);
-  std::vector<std::pair<double, double>> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
+  std::vector<vertex> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
 
   bool isValid(const vertex& a, const vertex& b);
   
   std::unordered_map<vertex, vertex, VertexHash> search(vertex start, vertex end);
   std::unordered_map<vertex, double, VertexHash> start_dist;
 
-  void constructPath(std::unordered_map<vertex, vertex, VertexHash> connections);
+  std::vector<vertex> constructPath(std::unordered_map<vertex, vertex, VertexHash> connections, vertex start, vertex end);
 
   // This method creates path for given start and goal pose.
   nav_msgs::msg::Path createPlan(
@@ -180,7 +180,7 @@ private:
   int num_samples = 200;
 
   bool createPointsMap = true;
-  std::vector<std::pair<double, double>> random_points;
+  std::vector<vertex> random_points;
 };
 
 

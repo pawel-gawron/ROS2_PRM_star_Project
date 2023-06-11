@@ -96,10 +96,18 @@ float StraightLine::heuristic_cost(vertex point, vertex end){
     return sqrt(pow(end.x - point.x, 2)+ pow(end.y - point.y, 2));
 }
 
-std::vector<std::pair<double, double>> StraightLine::random_point(const std::pair<double, double>& start, const std::pair<double, double>& end) {
-    std::vector<std::pair<double, double>> points;
-    points.push_back(start);
-    points.push_back(end);
+std::vector<vertex> StraightLine::random_point(const std::pair<double, double>& start, const std::pair<double, double>& end) {
+    std::vector<vertex> points;
+    vertex tmp_start;
+    tmp_start.x = start.first;
+    tmp_start.y = start.second;
+
+    vertex tmp_end;
+    tmp_end.x = end.first;
+    tmp_end.y = end.second;
+
+    points.push_back(tmp_start);
+    points.push_back(tmp_end);
 
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -135,7 +143,10 @@ std::vector<std::pair<double, double>> StraightLine::random_point(const std::pai
         costmap_->getCost(mx, my), my);
 
         if (costmap_->getCost(mx, my) < 200) {
-            points.push_back(std::make_pair(x, y));
+            vertex tmp;
+            tmp.x = x;
+            tmp.y = y;
+            points.push_back(tmp);
         }
     }
     while (points.size()<num_samples);
@@ -179,6 +190,7 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
   queue_vec.push_back(start_q);
 
   std::set<vertex> visited;
+  start_dist[start] = 0.0;
 
   vertex current;
   while (!queue_vec.empty())
@@ -219,18 +231,53 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
       q tmp = {new_distance + heuristic_cost(neighbour, end), neighbour};
       queue_vec.push_back(tmp);
 
+    // if (graph.find(current) != graph.end()) 
+    // {
+    //   delete graph[current];
+    //   for (auto& node_neighbours : graph)
+    // }
+
+//       if (graph.find(current) != graph.end()) 
+//       {
+//         graph.erase(current);
+//         for (auto& node_neighbours : graph) {
+//             auto& neighbours = node_neighbours.second;
+//             neighbours.erase(std::remove_if(neighbours.begin(), neighbours.end(), 
+//                 [current](const std::pair<vertex, double>& neighbor) {
+//                     return neighbour.first == current;
+//                 }), neighbours.end());
+//     }
+// }
+if (graph.find(current) != graph.end()) {
+    graph.erase(current);
+    for (auto& node_neighbors : graph) {
+        auto& neighbors = node_neighbors.second;
+        neighbours.erase(std::remove_if(neighbours.begin(), neighbours.end(), 
+            [current](const std::pair<vertex, double>& neighbor) {
+                return neighbor.first == current;
+            }), neighbours.end());
+    }
+}
       // self.publish_search() ???
     }
-
-
-
   }
-  return std::unordered_map<vertex, vertex, VertexHash>();
+  return parent;
 }
 
-void StraightLine::constructPath(std::unordered_map<vertex, vertex, VertexHash> connections)
+std::vector<vertex> StraightLine::constructPath(std::unordered_map<vertex, vertex, VertexHash> connections, vertex start, vertex end)
 {
+  std::vector<vertex> path;
+  path.push_back(end);
+  vertex current = end;
+
+  while (current != end)
+  {
+    path.push_back(parent[current]);
+    current = parent[current];
+  }
+  path.push_back(start);
   
+  return path;
 }
 
 
@@ -336,6 +383,14 @@ nav_msgs::msg::Path StraightLine::createPlan(
       createPointsMap = false;
   }
 
+    vertex tmp_start;
+    tmp_start.x = start.pose.position.x;
+    tmp_start.y = start.pose.position.y;
+
+    vertex tmp_end;
+    tmp_end.x = goal.pose.position.x;
+    tmp_end.y = goal.pose.position.y;
+
   // for (const auto& point : random_points) {
   //   RCLCPP_INFO(
   //       node_->get_logger(), "Random Point: x=%f, y=%f",
@@ -345,10 +400,33 @@ nav_msgs::msg::Path StraightLine::createPlan(
     // Używanie wygenerowanych punktów
   for (const auto& point : random_points) {
     // Dodawanie punktów do globalnej ścieżki
+    // geometry_msgs::msg::PoseStamped pose;
+    // pose.header.frame_id = global_frame_;
+    // pose.pose.position.x = point.x;
+    // pose.pose.position.y = point.y;
+    // global_path.poses.push_back(pose);
+
+    // add every point to graph as empty
+
+    graph[point] = node();
+  }
+
+  for (const auto& v : random_points)
+  {
+    computeNeighbours(v, 10.0, 5);
+  }
+
+  std::unordered_map<vertex, vertex, VertexHash> map;
+  map = search(tmp_start, tmp_end);
+
+  std::vector<vertex> path = constructPath(map, tmp_start, tmp_end);
+
+  for (const auto& point : path) {
+    // Dodawanie punktów do globalnej ścieżki
     geometry_msgs::msg::PoseStamped pose;
     pose.header.frame_id = global_frame_;
-    pose.pose.position.x = point.first;
-    pose.pose.position.y = point.second;
+    pose.pose.position.x = point.x;
+    pose.pose.position.y = point.y;
     global_path.poses.push_back(pose);
   }
 
@@ -377,41 +455,8 @@ nav_msgs::msg::Path StraightLine::createPlan(
   unsigned int start_x,start_y;
   costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
 
-  // inicjalizacja pustego grafu
-  std::vector<std::pair<double, double>> emptyVector;
-  // computeNeighbours(vertex& v, double radius, int K);
-  vertex startPosevertex;
-  startPosevertex.x = 1.0;
-  startPosevertex.y = 1.2;
 
-  vertex startPosevertex3;
-  startPosevertex3.x = 0.5;
-  startPosevertex3.y = 0.3;
-
-  vertex startPosevertex4;
-  startPosevertex4.x = 1.0;
-  startPosevertex4.y = 1.0;
-
-  vertex startPosevertex5;
-  startPosevertex5.x = 1.0;
-  startPosevertex5.y = 0.8;
-
-  vertex startPosevertex2;
-  startPosevertex2.x = 1.1;
-  startPosevertex2.y = 1.5;
-
-  graph[startPosevertex] = node();
-  // graph[startPosevertex].v = startPosevertex;
-
-  graph[startPosevertex3] = node();
-  // graph[startPosevertex3].v = startPosevertex3;
-
-  graph[startPosevertex4] = node();
-  // graph[startPosevertex4].v = startPosevertex4;
-
-  graph[startPosevertex5] = node();
-  // graph[startPosevertex5].v = startPosevertex5;
-  computeNeighbours(startPosevertex, 1000.0, 5);
+  // computeNeighbours(startPosevertex, 1000.0, 5);
   // computeNeighbours(startPosevertex2, 1000.0, 5);
 
   // RCLCPP_INFO(
