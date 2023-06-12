@@ -194,7 +194,7 @@ private:
   std::string global_frame_, name_;
 
   double interpolation_resolution_;
-  int num_samples = 800;
+  int num_samples = 5000;
 
   bool createPointsMap = true;
   std::vector<vertex> random_points;

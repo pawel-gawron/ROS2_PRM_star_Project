@@ -91,23 +91,6 @@ void StraightLine::deactivate()
 
 
 //CUSTOM FUNCTIONS
-  // std::unordered_map<vertex, node, VertexHash> StraightLine::getGraph()
-  // {
-  //   return graph;
-  // }
-  // node StraightLine::getGraphNode(vertex v)
-  // {
-  //   return graph[v];
-  // }
-  // void StraightLine::setGraph(std::unordered_map<vertex, node, VertexHash> newGraph)
-  // {
-  //   graph =  newGraph;
-  // }
-  // void StraightLine::setGraphNode(vertex v, node n)
-  // {
-  //   graph[v] = n;
-  // }
-
 float StraightLine::heuristic_cost(vertex point, vertex end){
     return sqrt(pow(end.x - point.x, 2)+ pow(end.y - point.y, 2));
 }
@@ -127,8 +110,6 @@ std::vector<vertex> StraightLine::random_point(const std::pair<double, double>& 
 
     std::random_device rd;
     std::mt19937 gen(rd());
-    // double originX = costmap_->getOriginX();
-    // double originY = costmap_->getOriginY();
 
     int width = costmap_->getSizeInMetersX();
     int height = costmap_->getSizeInMetersY();
@@ -142,21 +123,17 @@ std::vector<vertex> StraightLine::random_point(const std::pair<double, double>& 
         double x = distrib_x(gen);
         double y = distrib_y(gen);
 
-        RCLCPP_INFO(
-        node_->get_logger(), "Random: height=%f, width=%f",
-        x, y);
-
-        // VARIABLES UNUSED
-        // int x_check = static_cast<int>(x / interpolation_resolution_);
-        // int y_check = static_cast<int>(y / interpolation_resolution_);
+        // RCLCPP_INFO(
+        // node_->get_logger(), "Random: height=%f, width=%f",
+        // x, y);
 
         unsigned int mx,my;
 
         costmap_->worldToMap(x,y,mx,my);
 
-        RCLCPP_INFO(
-        node_->get_logger(), "world to map: height=%d, width=%d",
-        mx, my);
+        // RCLCPP_INFO(
+        // node_->get_logger(), "world to map: height=%d, width=%d",
+        // mx, my);
 
         if (costmap_->getCost(mx, my) < 150) {
             vertex tmp;
@@ -172,7 +149,6 @@ std::vector<vertex> StraightLine::random_point(const std::pair<double, double>& 
 
 bool StraightLine::isValid(const vertex& a, const vertex& b)
 {
-  return true;
     std::vector<double> x_div(100);
     std::vector<double> y_div(100);
 
@@ -190,7 +166,7 @@ bool StraightLine::isValid(const vertex& a, const vertex& b)
         costmap_->worldToMap(x_div[i], y_div[i], mx, my);
 
         if (costmap_->getCost(mx, my) > 200) {
-          return true;
+          return false;
         }
     }
     return true;
@@ -302,25 +278,7 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
 
 std::vector<vertex> StraightLine::constructPath(std::unordered_map<vertex, vertex, VertexHash> connections, vertex start, vertex end)
 {
-  // std::vector<vertex> path;
-  // path.push_back(end);
-  // vertex current = end;
-
-  // // for (const auto& point : parent_unordered_map) {
-  // //   RCLCPP_INFO(
-  // //   node_->get_logger(), "NodeX: %f, NodeY: %f", point.first.x, point.first.y);
-  // // }
-
-  // while (current != end)
-  // {
-  //   path.push_back(connections[current]);
-  //   current = connections[current];
-  // }
-  // path.push_back(start);
-  
-  // return path;
-
-    std::vector<vertex> path;
+  std::vector<vertex> path;
   path.push_back(end);
   vertex current = end;
 
@@ -341,6 +299,10 @@ bool compareBySecond(const std::pair<vertex, double> &a, const std::pair<vertex,
     return a.second < b.second;
 }
 
+bool sortByDist(const std::pair<vertex, double>& a, const std::pair<vertex, double>& b) {
+    return a.second < b.second;
+}
+
 void StraightLine::computeNeighbours(vertex v, double radius, int K)
 {
   node tmp;
@@ -358,9 +320,6 @@ void StraightLine::computeNeighbours(vertex v, double radius, int K)
         double dist = sqrt(pow(v.x - vertex_temp.x, 2) + pow(v.y - vertex_temp.y, 2));
         if (dist <= radius)
         {
-              // temp +=1;
-  //     RCLCPP_INFO(
-  // node_->get_logger(), "COUNTER: %d", temp);
           tmp.v.x = vertex_temp.x;
           tmp.v.y = vertex_temp.y;
           tmp.neighbours.push_back(std::make_pair(vertex_temp, dist));
@@ -371,32 +330,17 @@ void StraightLine::computeNeighbours(vertex v, double radius, int K)
 
   // Assuming you want to update the node in the graph
   // tmp.neighbours.resize(K);
+  // Sortowanie względem dist
+  // std::sort(tmp.neighbours.begin(), tmp.neighbours.end(), sortByDist);
+
+  // // Ograniczenie do pierwszych 5 próbek
+  // tmp.neighbours.resize(std::min(5, static_cast<int>(tmp.neighbours.size())));
+
   graph[v] = tmp;
   std::size_t mapSize = graph[v].neighbours.size();
-  RCLCPP_INFO(
-  node_->get_logger(), "GRAPH SIZE: %zu", mapSize);
+  // RCLCPP_INFO(
+  // node_->get_logger(), "GRAPH SIZE: %zu", mapSize);
 }
-
-
-// void StraightLine::addNeighbours(vertex v)
-// {
-//   node tmp;
-//   tmp.v = v;
-//   tmp.neighbours = StraightLine::computeNeighbours;
-//   graph[v] = tmp;
-// }
-
-
-// const std::vector<std::tuple<std::pair<double, double>, double>>& StraightLine::StraightLine(const std::pair<double, double>& vertex)
-// {
-//   return adjacencyList[vertex];
-// }
-
-// std::vector<std::pair<double, double>> StraightLine::computeNeighbours(const std::pair<double, double>& vertex, double radius, int K)
-// {
-
-// }
-
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -475,30 +419,13 @@ nav_msgs::msg::Path StraightLine::createPlan(
 
           // Używanie wygenerowanych punktów
   for (const auto& point : random_points) {
-    // Dodawanie punktów do globalnej ścieżki
-    // geometry_msgs::msg::PoseStamped pose;
-    // pose.header.frame_id = global_frame_;
-    // pose.pose.position.x = point.x;
-    // pose.pose.position.y = point.y;
-    // global_path.poses.push_back(pose);
-
-    // add every point to graph as empty
-
     graph[point] = node();
   }
 
-  for (const auto& v : random_points)
-  {
-    computeNeighbours(v, 0.5, 5);
-  }
-
-    //   for (const auto& vertex : graph)
-    // {
-    //   RCLCPP_INFO(
-    //   node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
-    //     // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
-    // }
-
+    for (const auto& v : random_points)
+    {
+      computeNeighbours(v, 0.2, 5);
+    }
   }
 
   // for (const auto& point : random_points) {
@@ -539,32 +466,6 @@ nav_msgs::msg::Path StraightLine::createPlan(
   goal_pose.header.stamp = node_->now();
   goal_pose.header.frame_id = global_frame_;
   global_path.poses.push_back(goal_pose);
-
-
-  // for (int i = 0; i < total_number_of_loop; ++i) {
-  //   geometry_msgs::msg::PoseStamped pose;
-  //   pose.pose.position.x = start.pose.position.x + x_increment * i;
-  //   pose.pose.position.y = start.pose.position.y + y_increment * i;
-  //   pose.pose.position.z = 0.0;
-  //   pose.pose.orientation.x = 0.0;
-  //   pose.pose.orientation.y = 0.0;
-  //   pose.pose.orientation.z = 0.0;
-  //   pose.pose.orientation.w = 1.0;
-  //   pose.header.stamp = node_->now();
-  //   pose.header.frame_id = global_frame_;
-  //   global_path.poses.push_back(pose);
-  // }
-
-  // geometry_msgs::msg::PoseStamped goal_pose = goal;
-  // goal_pose.header.stamp = node_->now();
-  // goal_pose.header.frame_id = global_frame_;
-  // global_path.poses.push_back(goal_pose);
-
-  //pobieramy kordynaty początku i końca
-  // unsigned int end_x,end_y;
-  // costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
-  // unsigned int start_x,start_y;
-  // costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
 
   return global_path;
 }
