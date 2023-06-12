@@ -35,18 +35,28 @@ Algorytm PRM* jest używany w systemach robotycznych opartych na ROS Navigation 
 ## Sposób włączenia programu
 ### Python
 cd ../ROS2_PRM_star_Project
+
 colcon build
+
 source /opt/ros/<ros2-distro>/setup.bash
+  
 source install/setup.bash
+  
 ros2 launch mapr_6_student rrt_launch.py vertices:=True
 
 ### C++
 cd ../ROS2_PRM_star_Project
+  
 colcon build
+  
 source /opt/ros/<ros2-distro>/setup.bash
+  
 source install/setup.bash
+  
 export TURTLEBOT3_MODEL=waffle
+  
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/<ros2-distro>/share/turtlebot3_gazebo/models
+  
 ros2 launch nav2_bringup tb3_simulation_launch.py
 
 
