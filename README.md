@@ -38,7 +38,7 @@ cd ../ROS2_PRM_star_Project
 
 colcon build
 
-source /opt/ros/"<ros2-distro>"/setup.bash
+source /opt/ros/\<ros2-distro\>/setup.bash
   
 source install/setup.bash
   
@@ -49,7 +49,7 @@ cd ../ROS2_PRM_star_Project
   
 colcon build
   
-source /opt/ros/"<ros2-distro>"/setup.bash
+source /opt/ros/\<ros2-distro\>/setup.bash
   
 source install/setup.bash
   
