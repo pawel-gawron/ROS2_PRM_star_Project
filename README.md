@@ -27,3 +27,26 @@ Algorytm PRM* jest używany w systemach robotycznych opartych na ROS Navigation 
 
 2. Następnie kod został zaimplementowany na docelowym środowisku jakim jest nav2 napisany za pomocą języka C++:
 ![image](https://github.com/pawel-gawron/ROS2_PRM_star_Project/assets/65308689/e9073312-ff1b-42a0-8eb9-04ba4bbca1e4)
+
+## Przydatne odnośniki
+1. https://navigation.ros.org/getting_started/index.html#running-the-example
+2. https://navigation.ros.org/plugin_tutorials/docs/writing_new_nav2planner_plugin.html
+
+## Sposób włączenia programu
+### Python
+cd ../ROS2_PRM_star_Project
+colcon build
+source /opt/ros/<ros2-distro>/setup.bash
+source install/setup.bash
+ros2 launch mapr_6_student rrt_launch.py vertices:=True
+
+### C++
+cd ../ROS2_PRM_star_Project
+colcon build
+source /opt/ros/<ros2-distro>/setup.bash
+source install/setup.bash
+export TURTLEBOT3_MODEL=waffle
+export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/<ros2-distro>/share/turtlebot3_gazebo/models
+ros2 launch nav2_bringup tb3_simulation_launch.py
+
+
