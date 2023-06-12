@@ -158,7 +158,7 @@ std::vector<vertex> StraightLine::random_point(const std::pair<double, double>& 
         node_->get_logger(), "world to map: height=%d, width=%d",
         mx, my);
 
-        if (costmap_->getCost(mx, my) < 200) {
+        if (costmap_->getCost(mx, my) < 150) {
             vertex tmp;
             tmp.x = x;
             tmp.y = y;
@@ -190,7 +190,7 @@ bool StraightLine::isValid(const vertex& a, const vertex& b)
         costmap_->worldToMap(x_div[i], y_div[i], mx, my);
 
         if (costmap_->getCost(mx, my) > 200) {
-          return false;
+          return true;
         }
     }
     return true;
@@ -220,8 +220,8 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
     current = queue_vec.front().v;
     queue_vec.erase(queue_vec.begin());
 
-    RCLCPP_INFO(
-    node_->get_logger(), "currentX: %f, currentY: %f", current.x, current.y);
+    // RCLCPP_INFO(
+    // node_->get_logger(), "currentX: %f, currentY: %f", current.x, current.y);
     double heuristic = queue_vec.front().distance;
 
     if (current.x == end.x && current.y == end.y){
@@ -252,6 +252,10 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
         //       RCLCPP_INFO(
         // node_->get_logger(), "####################################################");
 
+
+        //       RCLCPP_INFO(
+        // node_->get_logger(), "NeighbourX: %f,  NeighbourY: %f", neighbour.x, neighbour.y);
+
       double new_distance = start_dist[current] + distance;
       if (start_dist.find(neighbour) != start_dist.end() || \
       ((prev_neighbour.x == 0.0 && prev_neighbour.y == 0.0) \
@@ -259,8 +263,8 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
         {
         // RCLCPP_INFO(
         // node_->get_logger(), "####################################################");
-          parent_unordered_map[neighbour] = current;
-          // parent_unordered_map.insert(std::make_pair(neighbour, current));
+          // parent_unordered_map[neighbour] = current;
+          parent_unordered_map.insert(std::make_pair(neighbour, current));
           start_dist[neighbour] = new_distance;
           prev_neighbour = neighbour;
           prev_distance = new_distance;
@@ -298,22 +302,36 @@ std::unordered_map<vertex,vertex,VertexHash> StraightLine::search(vertex start, 
 
 std::vector<vertex> StraightLine::constructPath(std::unordered_map<vertex, vertex, VertexHash> connections, vertex start, vertex end)
 {
-  std::vector<vertex> path;
+  // std::vector<vertex> path;
+  // path.push_back(end);
+  // vertex current = end;
+
+  // // for (const auto& point : parent_unordered_map) {
+  // //   RCLCPP_INFO(
+  // //   node_->get_logger(), "NodeX: %f, NodeY: %f", point.first.x, point.first.y);
+  // // }
+
+  // while (current != end)
+  // {
+  //   path.push_back(connections[current]);
+  //   current = connections[current];
+  // }
+  // path.push_back(start);
+  
+  // return path;
+
+    std::vector<vertex> path;
   path.push_back(end);
   vertex current = end;
 
-    for (const auto& point : path) {
-      RCLCPP_INFO(
-      node_->get_logger(), "NodeX: %f, NodeY: %f", point.x, point.y);
-    }
-
-  while (current != end)
+  while (current != start)
   {
-    path.push_back(parent_unordered_map[current]);
-    current = parent_unordered_map[current];
+    current = connections[current];
+    path.push_back(current);
   }
-  path.push_back(start);
-  
+
+  std::reverse(path.begin(), path.end()); // Odwrócenie wektora, aby mieć ścieżkę od startu do końca.
+
   return path;
 }
 
@@ -458,31 +476,29 @@ nav_msgs::msg::Path StraightLine::createPlan(
           // Używanie wygenerowanych punktów
   for (const auto& point : random_points) {
     // Dodawanie punktów do globalnej ścieżki
-    geometry_msgs::msg::PoseStamped pose;
-    pose.header.frame_id = global_frame_;
-    pose.pose.position.x = point.x;
-    pose.pose.position.y = point.y;
-    global_path.poses.push_back(pose);
+    // geometry_msgs::msg::PoseStamped pose;
+    // pose.header.frame_id = global_frame_;
+    // pose.pose.position.x = point.x;
+    // pose.pose.position.y = point.y;
+    // global_path.poses.push_back(pose);
 
     // add every point to graph as empty
 
     graph[point] = node();
   }
 
-  RCLCPP_INFO(
-  node_->get_logger(), "Test1");
-
   for (const auto& v : random_points)
   {
-    computeNeighbours(v, 2, 5);
+    computeNeighbours(v, 0.5, 5);
   }
 
-      for (const auto& vertex : graph)
-    {
-      RCLCPP_INFO(
-      node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
-        // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
-    }
+    //   for (const auto& vertex : graph)
+    // {
+    //   RCLCPP_INFO(
+    //   node_->get_logger(), "Test %lf,  %lf,  %zu,  %zu", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
+    //     // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
+    // }
+
   }
 
   // for (const auto& point : random_points) {
@@ -491,42 +507,39 @@ nav_msgs::msg::Path StraightLine::createPlan(
   //       point.first, point.second);
   // }
 
-
-
-  RCLCPP_INFO(
-  node_->get_logger(), "Test2");
-
   std::unordered_map<vertex, vertex, VertexHash> map;
-
-  RCLCPP_INFO(
-  node_->get_logger(), "Test3");
 
   map = search(tmp_start, tmp_end);
 
-  RCLCPP_INFO(
-  node_->get_logger(), "Test4");
 
   std::vector<vertex> path = constructPath(map, tmp_start, tmp_end);
 
-  RCLCPP_INFO(
-  node_->get_logger(), "Test5");
-
-   RCLCPP_ERROR(
+  RCLCPP_ERROR(
   node_->get_logger(), "StartX: %f startY: %f goalX: %f goalY: %f originX: %f  originY: %f",
-  startPointX, startPointY, endPointX, endPointX, originX, originY);
-
+  startPointX, startPointY, endPointX, endPointY, originX, originY);
 
   for (const auto& point : path) {
-    // Dodawanie punktów do globalnej ścieżki
-    geometry_msgs::msg::PoseStamped pose;
-    pose.header.frame_id = global_frame_;
-    pose.pose.position.x = point.x;
-    pose.pose.position.y = point.y;
-    global_path.poses.push_back(pose);
+      // Dodawanie punktów do globalnej ścieżki
+      geometry_msgs::msg::PoseStamped pose;
+      pose.pose.position.x = point.x;
+      pose.pose.position.y = point.y;
+      pose.pose.position.z = 0.0;
+      pose.pose.orientation.x = 0.0;
+      pose.pose.orientation.y = 0.0;
+      pose.pose.orientation.z = 0.0;
+      pose.pose.orientation.w = 1.0;
+      pose.header.stamp = node_->now();
+      pose.header.frame_id = global_frame_;
+      global_path.poses.push_back(pose);
 
-    RCLCPP_INFO(
-    node_->get_logger(), "Points path: %f,  %f", point.x, point.y);
+      RCLCPP_INFO(
+      node_->get_logger(), "Points path: %f,  %f", point.x, point.y);
   }
+  geometry_msgs::msg::PoseStamped goal_pose = goal;
+  goal_pose.header.stamp = node_->now();
+  goal_pose.header.frame_id = global_frame_;
+  global_path.poses.push_back(goal_pose);
+
 
   // for (int i = 0; i < total_number_of_loop; ++i) {
   //   geometry_msgs::msg::PoseStamped pose;
@@ -552,22 +565,6 @@ nav_msgs::msg::Path StraightLine::createPlan(
   // costmap_->worldToMap(goal.pose.position.x,goal.pose.position.y,end_x,end_y);
   // unsigned int start_x,start_y;
   // costmap_->worldToMap(start.pose.position.x,start.pose.position.y,start_x,start_y);
-
-
-  // computeNeighbours(startPosevertex, 1000.0, 5);
-  // computeNeighbours(startPosevertex2, 1000.0, 5);
-
-  // RCLCPP_INFO(
-  // node_->get_logger(), "Twoja stara!!!");
-
-  
-  // for (const auto& vertex : graph)
-  // {
-  //   RCLCPP_INFO(
-  //   node_->get_logger(), "Twoja stara %lf,  %lf,  %ld,  %ld", vertex.first.x, vertex.first.y, vertex.second.neighbours.size(), vertex.second.neighbours.size());
-  //     // std::cout << vertex.first.x << "   " << vertex.first.y << "   " << vertex.second.neighbours[0].first.x << "   " << vertex.second.neighbours[0].first.y << std::endl;
-  // }
-
 
   return global_path;
 }
