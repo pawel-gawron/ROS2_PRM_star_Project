@@ -125,8 +125,8 @@ struct VertexHash
 
 class StraightLine : public nav2_core::GlobalPlanner
 {
-protected:
-  std::unordered_map<vertex, node, VertexHash> graph;
+// protected:
+//   std::unordered_map<vertex, node, VertexHash> graph;
 public:
   StraightLine() = default;
   ~StraightLine() = default;
@@ -150,7 +150,7 @@ public:
 //CUSTOM FUNCTIONS
   void computeNeighbours(vertex v, double radius, int K);
   float heuristic_cost(vertex point, vertex end);
-  std::vector<vertex> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end);
+  std::vector<vertex> random_point(const std::pair<double, double>& start, const std::pair<double, double>& end, double originX, double originY);
 
   bool isValid(const vertex& a, const vertex& b);
   
@@ -165,13 +165,19 @@ public:
     const geometry_msgs::msg::PoseStamped & goal) override;
 
 
-  std::unordered_map<vertex, vertex, VertexHash> parent;
+  std::unordered_map<vertex, vertex, VertexHash> parent_unordered_map;
 
 
-  std::unordered_map<vertex, node, VertexHash> getGraph();
-  node getGraphNode(vertex v);
-  void setGraph(std::unordered_map<vertex, node, VertexHash> newGraph);
-  void setGraphNode(vertex v, node n);
+  // std::unordered_map<vertex, node, VertexHash> getGraph();
+  // node getGraphNode(vertex v);
+  std::unordered_map<vertex, node, VertexHash> graph;
+  // void setGraph(std::unordered_map<vertex, node, VertexHash> newGraph);
+  // void setGraphNode(vertex v, node n);
+
+  double startPointX = 0;
+  double startPointY = 0;
+  double endPointX = 0;
+  double endPointY = 0;
   
   
 private:
@@ -188,7 +194,7 @@ private:
   std::string global_frame_, name_;
 
   double interpolation_resolution_;
-  int num_samples = 2000;
+  int num_samples = 200;
 
   bool createPointsMap = true;
   std::vector<vertex> random_points;
